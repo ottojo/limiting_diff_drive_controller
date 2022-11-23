@@ -1,4 +1,28 @@
 diff_drive_controller:
+  left_wheel_has_velocity_limits: {
+    type: bool,
+    default_value: false,
+  }
+  right_wheel_has_velocity_limits: {
+    type: bool,
+    default_value: false,
+  }
+  left_wheel_max_velocity: {
+      type: double,
+      default_value: .NAN,
+  }
+  right_wheel_max_velocity: {
+      type: double,
+      default_value: .NAN,
+  }
+  left_wheel_min_velocity: {
+      type: double,
+      default_value: .NAN,
+  }
+  right_wheel_min_velocity: {
+    type: double,
+    default_value: .NAN,
+  }
   left_wheel_names: {
     type: string_array,
     default_value: [],

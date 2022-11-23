@@ -252,10 +252,50 @@ controller_interface::return_type DiffDriveController::update(
   }
 
   // Compute wheels velocities:
-  const double velocity_left =
+  double velocity_left =
     (linear_command - angular_command * wheel_separation / 2.0) / left_wheel_radius;
-  const double velocity_right =
+  double velocity_right =
     (linear_command + angular_command * wheel_separation / 2.0) / right_wheel_radius;
+
+  // Limit individual wheel velocity to keep heading:
+  if (params_.left_wheel_has_velocity_limits)
+  {
+    if (velocity_left > params_.left_wheel_max_velocity && velocity_left != 0)
+    {
+      const double reduction_ratio = params_.left_wheel_max_velocity / velocity_left;
+      velocity_left *= reduction_ratio;
+      velocity_right *= reduction_ratio;
+    }
+    else if (velocity_left < params_.left_wheel_min_velocity && velocity_right != 0)
+    {
+      // If velocity and limit is on the same side of the sign we won't be able to keep heading
+      if (copysign(1.0, velocity_left) == copysign(1.0, params_.left_wheel_min_velocity))
+      {
+        const double ratio = params_.left_wheel_min_velocity / velocity_left;
+        velocity_left *= ratio;
+        velocity_right *= ratio;
+      }
+    }
+  }
+  if (params_.right_wheel_has_velocity_limits)
+  {
+    if (velocity_right > params_.right_wheel_max_velocity)
+    {
+      const double reduction_ratio = params_.right_wheel_max_velocity / velocity_right;
+      velocity_left *= reduction_ratio;
+      velocity_right *= reduction_ratio;
+    }
+    else if (velocity_right < params_.right_wheel_min_velocity)
+    {
+      // If velocity and limit is on the same side of the sign we wont be able to keep heading
+      if (copysign(1.0, velocity_right) == copysign(1.0, params_.right_wheel_min_velocity))
+      {
+        const double ratio = params_.right_wheel_min_velocity / velocity_right;
+        velocity_left *= ratio;
+        velocity_right *= ratio;
+      }
+    }
+  }
 
   // Set wheels velocities:
   for (size_t index = 0; index < static_cast<size_t>(wheels_per_side_); ++index)
