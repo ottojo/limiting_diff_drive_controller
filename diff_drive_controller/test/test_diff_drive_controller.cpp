@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "diff_drive_controller/diff_drive_controller.hpp"
+#include "limiting_diff_drive_controller/diff_drive_controller.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -42,10 +42,10 @@ const std::vector<std::string> left_wheel_names = {"left_wheel_joint"};
 const std::vector<std::string> right_wheel_names = {"right_wheel_joint"};
 }  // namespace
 
-class TestableDiffDriveController : public diff_drive_controller::DiffDriveController
+class TestableDiffDriveController : public limiting_diff_drive_controller::LimitingDiffDriveController
 {
 public:
-  using DiffDriveController::DiffDriveController;
+  using LimitingDiffDriveController::LimitingDiffDriveController;
   std::shared_ptr<geometry_msgs::msg::TwistStamped> getLastReceivedTwist()
   {
     std::shared_ptr<geometry_msgs::msg::TwistStamped> ret;

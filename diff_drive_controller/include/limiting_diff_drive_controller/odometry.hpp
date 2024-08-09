@@ -27,7 +27,7 @@
 #include "rclcpp/time.hpp"
 #include "rcpputils/rolling_mean_accumulator.hpp"
 
-namespace diff_drive_controller
+namespace limiting_diff_drive_controller
 {
 class Odometry
 {
@@ -83,6 +83,6 @@ private:
   RollingMeanAccumulator angular_accumulator_;
 };
 
-}  // namespace diff_drive_controller
+}  // namespace limiting_diff_drive_controller
 
 #endif  // DIFF_DRIVE_CONTROLLER__ODOMETRY_HPP_

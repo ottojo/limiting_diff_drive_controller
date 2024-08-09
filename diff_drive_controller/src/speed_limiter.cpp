@@ -19,9 +19,9 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "diff_drive_controller/speed_limiter.hpp"
+#include "limiting_diff_drive_controller/speed_limiter.hpp"
 
-namespace diff_drive_controller
+namespace limiting_diff_drive_controller
 {
 SpeedLimiter::SpeedLimiter(
   bool has_velocity_limits, bool has_acceleration_limits, bool has_jerk_limits, double min_velocity,
@@ -136,4 +136,4 @@ double SpeedLimiter::limit_jerk(double & v, double v0, double v1, double dt)
   return tmp != 0.0 ? v / tmp : 1.0;
 }
 
-}  // namespace diff_drive_controller
+}  // namespace limiting_diff_drive_controller

@@ -1,4 +1,4 @@
-diff_drive_controller:
+limiting_diff_drive_controller:
   left_wheel_has_velocity_limits: {
     type: bool,
     default_value: false,
