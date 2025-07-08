@@ -112,7 +112,7 @@ controller_interface::return_type LimitingDiffDriveController::update(
   }
 
   std::shared_ptr<Twist> last_command_msg;
-  received_velocity_msg_ptr_.get(last_command_msg);
+  received_velocity_msg_ptr_.get([&last_command_msg](auto msg) { last_command_msg = msg; });
 
   if (last_command_msg == nullptr)
   {
@@ -365,7 +365,8 @@ controller_interface::CallbackReturn LimitingDiffDriveController::on_configure(
   }
 
   const Twist empty_twist;
-  received_velocity_msg_ptr_.set(std::make_shared<Twist>(empty_twist));
+  received_velocity_msg_ptr_.set([&empty_twist](auto & value)
+                                 { value = std::make_shared<Twist>(empty_twist); });
 
   // Fill last two commands with default constructed commands
   previous_commands_.emplace(empty_twist);
@@ -389,7 +390,7 @@ controller_interface::CallbackReturn LimitingDiffDriveController::on_configure(
           "time, this message will only be shown once");
         msg->header.stamp = get_node()->get_clock()->now();
       }
-      received_velocity_msg_ptr_.set(std::move(msg));
+      received_velocity_msg_ptr_.set([&msg](auto & value) { value = msg; });
     });
 
   // initialize odometry publisher and message
@@ -515,11 +516,12 @@ controller_interface::CallbackReturn LimitingDiffDriveController::on_cleanup(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  received_velocity_msg_ptr_.set(std::make_shared<Twist>());
+  received_velocity_msg_ptr_.set([](auto & value) { value = std::make_shared<Twist>(); });
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::CallbackReturn LimitingDiffDriveController::on_error(const rclcpp_lifecycle::State &)
+controller_interface::CallbackReturn LimitingDiffDriveController::on_error(
+  const rclcpp_lifecycle::State &)
 {
   if (!reset())
   {
@@ -542,7 +544,7 @@ bool LimitingDiffDriveController::reset()
   subscriber_is_active_ = false;
   velocity_command_subscriber_.reset();
 
-  received_velocity_msg_ptr_.set(nullptr);
+  received_velocity_msg_ptr_.set([](auto & value) { value = nullptr; });
   is_halted = false;
   return true;
 }
@@ -555,7 +557,7 @@ controller_interface::CallbackReturn LimitingDiffDriveController::on_shutdown(
 
 void LimitingDiffDriveController::halt()
 {
-  const auto halt_wheels = [](auto & wheel_handles)
+  const auto halt_wheels = [](std::vector<WheelHandle> & wheel_handles)
   {
     for (const auto & wheel_handle : wheel_handles)
     {
