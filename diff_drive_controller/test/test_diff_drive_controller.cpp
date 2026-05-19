@@ -14,7 +14,6 @@
 
 #include <gmock/gmock.h>
 
-#include <functional>
 #include <hardware_interface/handle.hpp>
 #include <memory>
 #include <string>
