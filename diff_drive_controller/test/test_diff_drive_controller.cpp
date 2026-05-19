@@ -14,6 +14,7 @@
 
 #include <gmock/gmock.h>
 
+#include <hardware_interface/handle.hpp>
 #include <memory>
 #include <string>
 #include <thread>
@@ -196,18 +197,18 @@ protected:
   std::vector<double> position_values_ = {0.1, 0.2};
   std::vector<double> velocity_values_ = {0.01, 0.02};
 
-  hardware_interface::StateInterface left_wheel_pos_state_{
-    left_wheel_names[0], HW_IF_POSITION, &position_values_[0]};
-  hardware_interface::StateInterface right_wheel_pos_state_{
-    right_wheel_names[0], HW_IF_POSITION, &position_values_[1]};
-  hardware_interface::StateInterface left_wheel_vel_state_{
-    left_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[0]};
-  hardware_interface::StateInterface right_wheel_vel_state_{
-    right_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[1]};
-  hardware_interface::CommandInterface left_wheel_vel_cmd_{
-    left_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[0]};
-  hardware_interface::CommandInterface right_wheel_vel_cmd_{
-    right_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[1]};
+  hardware_interface::StateInterface::ConstSharedPtr left_wheel_pos_state_ = std::make_shared<const hardware_interface::StateInterface>(
+    left_wheel_names[0], HW_IF_POSITION, &position_values_[0]);
+  hardware_interface::StateInterface::ConstSharedPtr right_wheel_pos_state_ = std::make_shared<const hardware_interface::StateInterface>(
+    right_wheel_names[0], HW_IF_POSITION, &position_values_[1]);
+  hardware_interface::StateInterface::ConstSharedPtr left_wheel_vel_state_ = std::make_shared<const hardware_interface::StateInterface>(
+    left_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[0]);
+  hardware_interface::StateInterface::ConstSharedPtr right_wheel_vel_state_ = std::make_shared<const hardware_interface::StateInterface>(
+    right_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[1]);
+  hardware_interface::CommandInterface::SharedPtr left_wheel_vel_cmd_ = std::make_shared<hardware_interface::CommandInterface>(
+    left_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[0]);
+  hardware_interface::CommandInterface::SharedPtr right_wheel_vel_cmd_ = std::make_shared<hardware_interface::CommandInterface>(
+    right_wheel_names[0], HW_IF_VELOCITY, &velocity_values_[1]);
 
   rclcpp::Node::SharedPtr pub_node;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr velocity_publisher;
@@ -513,8 +514,8 @@ TEST_F(TestDiffDriveController, cleanup)
   ASSERT_EQ(State::PRIMARY_STATE_UNCONFIGURED, state.id());
 
   // should be stopped
-  EXPECT_EQ(0.0, left_wheel_vel_cmd_.get_optional().value_or(1.0));
-  EXPECT_EQ(0.0, right_wheel_vel_cmd_.get_optional().value_or(1.0));
+  EXPECT_EQ(0.0, left_wheel_vel_cmd_->get_optional().value_or(1.0));
+  EXPECT_EQ(0.0, right_wheel_vel_cmd_->get_optional().value_or(1.0));
 
   executor.cancel();
 }
@@ -534,8 +535,8 @@ TEST_F(TestDiffDriveController, correct_initialization_using_parameters)
   assignResourcesPosFeedback();
 
   ASSERT_EQ(State::PRIMARY_STATE_INACTIVE, state.id());
-  EXPECT_EQ(0.01, left_wheel_vel_cmd_.get_optional().value_or(0.0));
-  EXPECT_EQ(0.02, right_wheel_vel_cmd_.get_optional().value_or(0.0));
+  EXPECT_EQ(0.01, left_wheel_vel_cmd_->get_optional().value_or(0.0));
+  EXPECT_EQ(0.02, right_wheel_vel_cmd_->get_optional().value_or(0.0));
 
   state = controller_->get_node()->activate();
   ASSERT_EQ(State::PRIMARY_STATE_ACTIVE, state.id());
@@ -550,8 +551,8 @@ TEST_F(TestDiffDriveController, correct_initialization_using_parameters)
   ASSERT_EQ(
     controller_->update(rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Duration::from_seconds(0.01)),
     controller_interface::return_type::OK);
-  EXPECT_EQ(1.0, left_wheel_vel_cmd_.get_optional().value_or(0.0));
-  EXPECT_EQ(1.0, right_wheel_vel_cmd_.get_optional().value_or(0.0));
+  EXPECT_EQ(1.0, left_wheel_vel_cmd_->get_optional().value_or(0.0));
+  EXPECT_EQ(1.0, right_wheel_vel_cmd_->get_optional().value_or(0.0));
 
   // deactivated
   // wait so controller process the second point when deactivated
@@ -562,14 +563,14 @@ TEST_F(TestDiffDriveController, correct_initialization_using_parameters)
     controller_->update(rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Duration::from_seconds(0.01)),
     controller_interface::return_type::OK);
 
-  EXPECT_EQ(0.0, left_wheel_vel_cmd_.get_optional().value_or(1.0)) << "Wheels are halted on deactivate()";
-  EXPECT_EQ(0.0, right_wheel_vel_cmd_.get_optional().value_or(1.0)) << "Wheels are halted on deactivate()";
+  EXPECT_EQ(0.0, left_wheel_vel_cmd_->get_optional().value_or(1.0)) << "Wheels are halted on deactivate()";
+  EXPECT_EQ(0.0, right_wheel_vel_cmd_->get_optional().value_or(1.0)) << "Wheels are halted on deactivate()";
 
   // cleanup
   state = controller_->get_node()->cleanup();
   ASSERT_EQ(State::PRIMARY_STATE_UNCONFIGURED, state.id());
-  EXPECT_EQ(0.0, left_wheel_vel_cmd_.get_optional().value_or(1.0));
-  EXPECT_EQ(0.0, right_wheel_vel_cmd_.get_optional().value_or(1.0));
+  EXPECT_EQ(0.0, left_wheel_vel_cmd_->get_optional().value_or(1.0));
+  EXPECT_EQ(0.0, right_wheel_vel_cmd_->get_optional().value_or(1.0));
 
   state = controller_->get_node()->configure();
   ASSERT_EQ(State::PRIMARY_STATE_INACTIVE, state.id());
